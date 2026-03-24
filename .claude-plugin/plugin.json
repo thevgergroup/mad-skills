@@ -1,0 +1,11 @@
+{
+  "name": "mad-skills",
+  "description": "Battle-tested Claude Code skills based on real shipping experience",
+  "version": "1.0.0",
+  "author": {
+    "name": "The Vger Group"
+  },
+  "homepage": "https://github.com/thevgergroup/mad-skills",
+  "repository": "https://github.com/thevgergroup/mad-skills",
+  "license": "MIT"
+}

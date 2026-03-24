@@ -1,0 +1,26 @@
+{
+  "name": "aws-marketplace",
+  "version": "3.0.0",
+  "description": "AWS Marketplace publishing assistant for AMI, Container, and SaaS products",
+  "author": "generic",
+  "tags": ["aws", "marketplace", "publishing", "saas", "ami", "container", "compliance"],
+  "triggers": [
+    "aws marketplace",
+    "marketplace publishing",
+    "publish to aws",
+    "ami product",
+    "saas integration",
+    "container marketplace"
+  ],
+  "entrypoint": "SKILL.md",
+  "capabilities": [
+    "seller-onboarding",
+    "compliance-checking",
+    "ami-packaging",
+    "container-packaging",
+    "saas-integration",
+    "catalog-automation",
+    "pricing-configuration",
+    "validation"
+  ]
+}
