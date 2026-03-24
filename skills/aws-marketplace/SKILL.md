@@ -1,6 +1,10 @@
 ---
 name: aws-marketplace
 description: Publish paid container products to AWS Marketplace. Covers the full lifecycle — seller onboarding, ECR image pipeline, pricing, CloudFormation templates, AWS review, and post-launch operations. Based on direct experience shipping a real paid listing.
+license: MIT
+metadata:
+  author: thevgergroup
+  version: "3.0.0"
 user-invocable: true
 argument-hint: "[task description]"
 ---
