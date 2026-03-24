@@ -62,11 +62,30 @@ Only `plugin.json` goes in `.claude-plugin/`. Skills, commands, agents, and hook
 
 ### SKILL.md conventions
 
+Each `SKILL.md` **must** have YAML frontmatter for Claude Code to discover and list the skill:
+
+```yaml
+---
+name: skill-name                  # defaults to directory name if omitted
+description: When and why to use this skill — Claude uses this for auto-discovery
+user-invocable: true              # false to hide from the / menu
+argument-hint: "[task description]"  # shown in autocomplete
+---
+```
+
+Once installed, skills are invoked as `/mad-skills:skill-name` in Claude Code.
+
+### Companion doc conventions
+
 - Opens with an overview and a "companion documents" table mapping tasks to specific `.md` files
 - Companion docs are loaded **on-demand** — do not load all of them upfront
 - Includes hard constraints and permanent decisions prominently, before any how-to content
 - Uses checklists for multi-step sequences where order or completeness matters
 - Common errors and their fixes belong in SKILL.md, not scattered across companion docs
+
+### Companion doc conventions
+
+Companion `.md` files in the skill directory are supporting reference material, not standalone skills. They should not have frontmatter. Reference them from `SKILL.md` so Claude knows when to load them.
 
 ## Adding a new skill
 
