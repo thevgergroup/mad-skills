@@ -21,9 +21,14 @@ Each skill in this collection is grounded in direct shipping experience — wher
 /plugin install https://github.com/thevgergroup/mad-skills
 ```
 
-**Via skills.sh:**
+**Via skills.sh — install a specific skill:**
 ```bash
-npx skills add thevgergroup/mad-skills
+npx skills add https://github.com/thevgergroup/mad-skills --skill aws-marketplace
+```
+
+**Or install all skills:**
+```bash
+npx skills add https://github.com/thevgergroup/mad-skills
 ```
 
 Once installed, skills are available as `/mad-skills:<skill-name>` in Claude Code.
