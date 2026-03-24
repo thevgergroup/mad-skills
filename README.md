@@ -23,7 +23,7 @@ Each skill in this collection is grounded in direct shipping experience — wher
 
 **Via skills.sh:**
 ```bash
-npx skillsadd thevgergroup/mad-skills
+npx skills add thevgergroup/mad-skills
 ```
 
 Once installed, skills are available as `/mad-skills:<skill-name>` in Claude Code.
