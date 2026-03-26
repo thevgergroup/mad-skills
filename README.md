@@ -39,6 +39,7 @@ Once installed, skills are available as `/mad-skills:<skill-name>` in Claude Cod
 |---|---|
 | [`aws-marketplace`](skills/aws-marketplace/) | Publish paid container products to AWS Marketplace — entity model, 14-step creation sequence, ECR pipeline, pricing, CloudFormation, review process, and post-launch operations |
 | [`architect-diagram`](skills/architect-diagram/) | Generate clean cloud architecture diagrams from natural language or YAML specs — AWS/GCP/Azure with VPC/AZ/subnet/ECS/K8s nesting, hybrid on-prem/cloud topologies, and proper cloud provider icons |
+| [`docsearch`](skills/docsearch/) | Semantic search over a local document archive (PDF, Word, PowerPoint, Excel, Markdown) using ChromaDB and any OpenAI-compatible embeddings endpoint — incremental indexing, metadata filtering, JSON output for agent use |
 
 ## How these skills work
 

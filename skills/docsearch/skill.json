@@ -1,0 +1,23 @@
+{
+  "name": "docsearch",
+  "version": "1.0.0",
+  "description": "Semantic search over a local document archive using ChromaDB and OpenAI-compatible embeddings",
+  "entrypoint": "SKILL.md",
+  "triggers": [
+    "find a document",
+    "search my documents",
+    "look up a file",
+    "find that thing about",
+    "search docs",
+    "docsearch"
+  ],
+  "capabilities": [
+    "Index local documents (PDF, Word, PowerPoint, Excel, Markdown) into ChromaDB",
+    "Semantic search over indexed documents",
+    "Incremental re-indexing with content hashing",
+    "Filter results by directory depth, file type, or any metadata field",
+    "Works with any OpenAI-compatible embeddings endpoint"
+  ],
+  "author": "The Vger Group",
+  "tags": ["search", "documents", "chromadb", "embeddings", "semantic-search", "rag", "local"]
+}
