@@ -1,0 +1,122 @@
+title: "Serverless Event Processing Pipeline"
+engine: d2
+layout: dagre
+
+connection_types:
+  https: { color: "#2196F3", style: solid }
+  internal: { color: "#9E9E9E", style: dashed }
+
+boundaries:
+  - id: aws
+    type: cloud
+    label: "AWS us-east-1"
+    direction: right
+    children:
+      - id: clients
+        type: subnet-public
+        label: "Client Layer"
+        direction: down
+        children:
+          - id: mobile
+            label: "Mobile App"
+            icon: users
+          - id: web
+            label: "Web Client"
+            icon: user
+      - id: ingestion
+        type: subnet-private
+        label: "Ingestion"
+        direction: down
+        children:
+          - id: cognito
+            label: "Cognito Auth"
+            icon: cognito
+          - id: api_gw
+            label: "API Gateway"
+            icon: api-gateway
+          - id: ingest_fn
+            label: "Ingest Lambda"
+            icon: lambda
+      - id: processing
+        type: subnet-private
+        label: "Processing"
+        direction: down
+        children:
+          - id: sqs
+            label: "SQS Queue"
+            icon: sqs
+          - id: process_fn
+            label: "Process Lambda"
+            icon: lambda
+          - id: cloudwatch
+            label: "CloudWatch"
+            icon: cloudwatch
+      - id: storage
+        type: subnet-private
+        label: "Storage"
+        direction: down
+        children:
+          - id: dynamo
+            label: "DynamoDB"
+            icon: dynamodb
+          - id: s3_raw
+            label: "S3 Raw"
+            icon: s3
+          - id: s3_out
+            label: "S3 Output"
+            icon: s3
+      - id: notification
+        type: subnet-private
+        label: "Notification"
+        direction: down
+        children:
+          - id: sns
+            label: "SNS Topic"
+            icon: sns
+          - id: notify_fn
+            label: "Notify Lambda"
+            icon: lambda
+
+connections:
+  - from: aws.clients.mobile
+    to: aws.ingestion.api_gw
+    type: https
+  - from: aws.clients.web
+    to: aws.ingestion.api_gw
+    type: https
+  - from: aws.ingestion.api_gw
+    to: aws.ingestion.cognito
+    type: internal
+    label: "auth"
+  - from: aws.ingestion.api_gw
+    to: aws.ingestion.ingest_fn
+    type: https
+  - from: aws.ingestion.ingest_fn
+    to: aws.storage.s3_raw
+    type: internal
+    label: "store"
+  - from: aws.ingestion.ingest_fn
+    to: aws.processing.sqs
+    type: internal
+    label: "enqueue"
+  - from: aws.processing.sqs
+    to: aws.processing.process_fn
+    type: internal
+    label: "trigger"
+  - from: aws.processing.process_fn
+    to: aws.storage.dynamo
+    type: internal
+    label: "write"
+  - from: aws.processing.process_fn
+    to: aws.storage.s3_out
+    type: internal
+  - from: aws.processing.process_fn
+    to: aws.notification.sns
+    type: internal
+  - from: aws.processing.process_fn
+    to: aws.processing.cloudwatch
+    type: internal
+    label: "metrics"
+  - from: aws.notification.sns
+    to: aws.notification.notify_fn
+    type: internal

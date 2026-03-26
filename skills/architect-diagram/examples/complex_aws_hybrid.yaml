@@ -1,0 +1,165 @@
+title: "Production AWS Hybrid Architecture"
+engine: d2
+layout: dagre
+
+connection_types:
+  https: { color: "#2196F3", style: solid }
+  grpc: { color: "#9C27B0", style: solid }
+  sql: { color: "#4CAF50", style: solid }
+  vpn: { color: "#FF9800", style: dashed }
+  bgp: { color: "#F44336", style: dashed }
+  direct_connect: { color: "#FF5722", style: solid, width: 3 }
+  replication: { color: "#607D8B", style: dashed }
+
+boundaries:
+  - id: on_prem
+    type: datacenter
+    label: "On-Premises DC"
+    children:
+      - id: corp_firewall
+        label: "Firewall"
+        icon: firewall
+      - id: corp_router
+        label: "BGP Router"
+        icon: router
+
+  - id: aws
+    type: cloud
+    label: "AWS us-east-1"
+    children:
+      - id: cloudfront
+        label: "CloudFront CDN"
+        icon: cloudfront
+      - id: waf
+        label: "WAF"
+        icon: waf
+      - id: tgw
+        label: "Transit Gateway"
+        icon: tgw
+      - id: vpc_prod
+        type: vpc
+        label: "VPC 10.0.0.0/16"
+        icon: vpc
+        children:
+          - id: alb
+            label: "ALB"
+            icon: alb
+          - id: az1
+            type: availability-zone
+            label: "AZ us-east-1a"
+            direction: down
+            children:
+              - id: pub_subnet_1
+                type: subnet-public
+                label: "Public 10.0.1.0/24"
+                children:
+                  - id: nat1
+                    label: "NAT GW"
+                    icon: nat-gateway
+              - id: priv_subnet_1
+                type: subnet-private
+                label: "Private 10.0.2.0/24"
+                children:
+                  - id: ecs_cluster
+                    type: ecs-cluster
+                    label: "ECS Cluster"
+                    icon: ecs
+                    children:
+                      - id: svc_api
+                        label: "API Service (3 tasks)"
+                        icon: fargate
+                      - id: svc_worker
+                        label: "Worker (2 tasks)"
+                        icon: fargate
+                  - id: rds_primary
+                    label: "RDS Primary"
+                    icon: rds
+          - id: az2
+            type: availability-zone
+            label: "AZ us-east-1b"
+            direction: down
+            children:
+              - id: pub_subnet_2
+                type: subnet-public
+                label: "Public 10.0.3.0/24"
+                children:
+                  - id: nat2
+                    label: "NAT GW"
+                    icon: nat-gateway
+              - id: priv_subnet_2
+                type: subnet-private
+                label: "Private 10.0.4.0/24"
+                children:
+                  - id: rds_standby
+                    label: "RDS Standby"
+                    icon: rds
+                  - id: elasticache
+                    label: "ElastiCache"
+                    icon: elasticache
+
+nodes:
+  - id: internet
+    label: "Internet"
+    icon: internet
+  - id: s3
+    label: "S3 Bucket"
+    icon: s3
+  - id: secrets_mgr
+    label: "Secrets Manager"
+    icon: secrets-manager
+  - id: cloudwatch
+    label: "CloudWatch"
+    icon: cloudwatch
+
+connections:
+  - from: internet
+    to: aws.cloudfront
+    type: https
+    label: "HTTPS"
+  - from: aws.cloudfront
+    to: aws.waf
+    type: https
+  - from: aws.waf
+    to: aws.vpc_prod.alb
+    type: https
+  - from: aws.vpc_prod.alb
+    to: aws.vpc_prod.az1.priv_subnet_1.ecs_cluster.svc_api
+    type: https
+  - from: aws.vpc_prod.az1.priv_subnet_1.ecs_cluster.svc_api
+    to: aws.vpc_prod.az1.priv_subnet_1.rds_primary
+    type: sql
+    label: "5432"
+  - from: aws.vpc_prod.az1.priv_subnet_1.ecs_cluster.svc_api
+    to: aws.vpc_prod.az2.priv_subnet_2.elasticache
+    type: redis
+    label: "cache"
+  - from: aws.vpc_prod.az1.priv_subnet_1.ecs_cluster.svc_api
+    to: s3
+    type: https
+    label: "uploads"
+  - from: aws.vpc_prod.az1.priv_subnet_1.ecs_cluster.svc_worker
+    to: aws.vpc_prod.az1.priv_subnet_1.rds_primary
+    type: sql
+  - from: aws.vpc_prod.az1.priv_subnet_1.rds_primary
+    to: aws.vpc_prod.az2.priv_subnet_2.rds_standby
+    type: replication
+    label: "sync"
+  - from: on_prem.corp_firewall
+    to: on_prem.corp_router
+    type: internal
+  - from: on_prem.corp_router
+    to: aws.tgw
+    type: vpn
+    label: "IPSec VPN"
+  - from: aws.tgw
+    to: aws.vpc_prod.alb
+    type: https
+    label: "internal"
+  - from: aws.vpc_prod.az1.priv_subnet_1.ecs_cluster.svc_api
+    to: secrets_mgr
+    type: https
+    label: "secrets"
+  - from: aws.vpc_prod.az1.priv_subnet_1.ecs_cluster.svc_api
+    to: cloudwatch
+    type: https
+    label: "metrics"

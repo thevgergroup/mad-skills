@@ -1,0 +1,113 @@
+title: "Microservices Platform on GCP"
+engine: d2
+layout: elk
+
+connection_types:
+  https: { color: "#2196F3", style: solid }
+  grpc: { color: "#9C27B0", style: solid }
+  sql: { color: "#4CAF50", style: solid }
+  kafka: { color: "#E91E63", style: solid }
+  internal: { color: "#9E9E9E", style: dashed }
+
+nodes:
+  - id: users
+    label: "Users"
+    icon: users
+
+boundaries:
+  - id: gcp
+    type: cloud
+    label: "GCP us-central1"
+    children:
+      - id: edge
+        type: subnet-public
+        label: "Edge Tier"
+        direction: right
+        children:
+          - id: cdn
+            label: "Cloud CDN"
+            icon: gcp/network/cdn
+          - id: lb
+            label: "Cloud Load Balancer"
+            icon: gcp/network/load-balancing
+      - id: vpc
+        type: vpc
+        label: "VPC"
+        children:
+          - id: services
+            type: subnet-private
+            label: "Services Tier (Cloud Run)"
+            direction: right
+            children:
+              - id: api_svc
+                label: "API Gateway"
+                icon: gcp/compute/run
+              - id: user_svc
+                label: "User Service"
+                icon: gcp/compute/run
+              - id: order_svc
+                label: "Order Service"
+                icon: gcp/compute/run
+              - id: payment_svc
+                label: "Payment Service"
+                icon: gcp/compute/functions
+          - id: data
+            type: subnet-private
+            label: "Data Tier"
+            direction: right
+            children:
+              - id: user_db
+                label: "Cloud SQL"
+                icon: gcp/database/sql
+              - id: order_db
+                label: "Firestore"
+                icon: gcp/database/firestore
+              - id: cache
+                label: "Memorystore"
+                icon: gcp/database/memorystore
+              - id: gcs
+                label: "Cloud Storage"
+                icon: gcp/storage/storage
+              - id: pubsub
+                label: "Pub/Sub"
+                icon: gcp/analytics/pubsub
+
+connections:
+  - from: users
+    to: gcp.edge.cdn
+    type: https
+    label: "HTTPS"
+  - from: gcp.edge.cdn
+    to: gcp.edge.lb
+    type: https
+  - from: gcp.edge.lb
+    to: gcp.vpc.services.api_svc
+    type: https
+    label: "route"
+  - from: gcp.vpc.services.api_svc
+    to: gcp.vpc.services.user_svc
+    type: grpc
+  - from: gcp.vpc.services.api_svc
+    to: gcp.vpc.services.order_svc
+    type: grpc
+  - from: gcp.vpc.services.order_svc
+    to: gcp.vpc.services.payment_svc
+    type: grpc
+  - from: gcp.vpc.services.payment_svc
+    to: gcp.vpc.data.pubsub
+    type: kafka
+    label: "events"
+  - from: gcp.vpc.services.user_svc
+    to: gcp.vpc.data.user_db
+    type: sql
+  - from: gcp.vpc.services.user_svc
+    to: gcp.vpc.data.cache
+    type: internal
+    label: "cache"
+  - from: gcp.vpc.services.order_svc
+    to: gcp.vpc.data.order_db
+    type: sql
+  - from: gcp.vpc.services.order_svc
+    to: gcp.vpc.data.gcs
+    type: https
+    label: "files"

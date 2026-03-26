@@ -1,0 +1,199 @@
+title: "EKS Microservices Platform"
+engine: d2
+layout: dagre
+
+connection_types:
+  https: { color: "#2196F3", style: solid }
+  grpc: { color: "#9C27B0", style: solid }
+  sql: { color: "#4CAF50", style: solid }
+  kafka: { color: "#E91E63", style: solid }
+  redis: { color: "#F44336", style: solid }
+  internal: { color: "#9E9E9E", style: dashed }
+  replication: { color: "#607D8B", style: dashed }
+
+boundaries:
+  - id: aws
+    type: cloud
+    label: "AWS us-east-1"
+    children:
+      - id: vpc
+        type: vpc
+        label: "VPC 10.0.0.0/16"
+        children:
+          - id: ingress_zone
+            type: subnet-public
+            label: "Public Subnets"
+            direction: right
+            children:
+              - id: nlb
+                label: "NLB"
+                icon: nlb
+              - id: nginx_ingress
+                label: "NGINX Ingress"
+                icon: ingress
+          - id: eks
+            type: k8s-cluster
+            label: "EKS Cluster (v1.29)"
+            direction: right
+            children:
+              - id: ns_frontend
+                type: k8s-namespace
+                label: "namespace: frontend"
+                children:
+                  - id: web_deploy
+                    label: "web (3 replicas)"
+                    icon: deployment
+                  - id: static_deploy
+                    label: "static-assets (2 replicas)"
+                    icon: deployment
+              - id: ns_backend
+                type: k8s-namespace
+                label: "namespace: backend"
+                children:
+                  - id: api_deploy
+                    label: "api-service (5 replicas)"
+                    icon: deployment
+                  - id: auth_deploy
+                    label: "auth-service (3 replicas)"
+                    icon: deployment
+                  - id: order_deploy
+                    label: "order-service (3 replicas)"
+                    icon: deployment
+                  - id: notification_deploy
+                    label: "notification-service (2 replicas)"
+                    icon: deployment
+              - id: ns_data
+                type: k8s-namespace
+                label: "namespace: data"
+                children:
+                  - id: kafka_client
+                    label: "Kafka Connect"
+                    icon: pod
+                  - id: debezium
+                    label: "Debezium CDC"
+                    icon: pod
+          - id: data_zone
+            type: subnet-private
+            label: "Data Subnets"
+            direction: right
+            children:
+              - id: rds_aurora
+                label: "Aurora PostgreSQL"
+                icon: aurora
+              - id: aurora_replica
+                label: "Aurora Read Replica"
+                icon: aurora
+              - id: elasticache_redis
+                label: "ElastiCache Redis"
+                icon: elasticache
+              - id: msk
+                label: "MSK (Kafka)"
+                icon: msk
+
+nodes:
+  - id: internet
+    label: "Internet"
+    icon: internet
+  - id: route53
+    label: "Route 53"
+    icon: route53
+  - id: cloudfront_cdn
+    label: "CloudFront"
+    icon: cloudfront
+  - id: s3_assets
+    label: "S3 Static Assets"
+    icon: s3
+  - id: ecr
+    label: "ECR Registry"
+    icon: ecr
+  - id: secrets_manager
+    label: "Secrets Manager"
+    icon: secrets-manager
+  - id: cloudwatch
+    label: "CloudWatch"
+    icon: cloudwatch
+
+connections:
+  # Ingress path
+  - from: internet
+    to: route53
+    type: https
+  - from: route53
+    to: cloudfront_cdn
+    type: https
+  - from: cloudfront_cdn
+    to: aws.vpc.ingress_zone.nlb
+    type: https
+  - from: cloudfront_cdn
+    to: s3_assets
+    type: https
+    label: "static"
+  - from: aws.vpc.ingress_zone.nlb
+    to: aws.vpc.ingress_zone.nginx_ingress
+    type: https
+  # Ingress to frontend
+  - from: aws.vpc.ingress_zone.nginx_ingress
+    to: aws.vpc.eks.ns_frontend.web_deploy
+    type: https
+  # Frontend to backend
+  - from: aws.vpc.eks.ns_frontend.web_deploy
+    to: aws.vpc.eks.ns_backend.api_deploy
+    type: grpc
+    label: "gRPC"
+  - from: aws.vpc.eks.ns_frontend.web_deploy
+    to: aws.vpc.eks.ns_backend.auth_deploy
+    type: grpc
+    label: "authn"
+  # Backend internal
+  - from: aws.vpc.eks.ns_backend.api_deploy
+    to: aws.vpc.eks.ns_backend.order_deploy
+    type: grpc
+  - from: aws.vpc.eks.ns_backend.order_deploy
+    to: aws.vpc.eks.ns_backend.notification_deploy
+    type: kafka
+    label: "events"
+  # Backend to data
+  - from: aws.vpc.eks.ns_backend.api_deploy
+    to: aws.vpc.data_zone.rds_aurora
+    type: sql
+    label: "5432"
+  - from: aws.vpc.eks.ns_backend.order_deploy
+    to: aws.vpc.data_zone.rds_aurora
+    type: sql
+  - from: aws.vpc.eks.ns_backend.api_deploy
+    to: aws.vpc.data_zone.elasticache_redis
+    type: redis
+    label: "sessions"
+  # Kafka / CDC
+  - from: aws.vpc.eks.ns_backend.order_deploy
+    to: aws.vpc.data_zone.msk
+    type: kafka
+    label: "publish"
+  - from: aws.vpc.eks.ns_data.debezium
+    to: aws.vpc.data_zone.rds_aurora
+    type: sql
+    label: "CDC"
+  - from: aws.vpc.eks.ns_data.debezium
+    to: aws.vpc.data_zone.msk
+    type: kafka
+  - from: aws.vpc.eks.ns_data.kafka_client
+    to: aws.vpc.data_zone.msk
+    type: kafka
+  # DB replication
+  - from: aws.vpc.data_zone.rds_aurora
+    to: aws.vpc.data_zone.aurora_replica
+    type: replication
+    label: "async"
+  # Infrastructure connections
+  - from: aws.vpc.eks.ns_backend.api_deploy
+    to: secrets_manager
+    type: https
+    label: "secrets"
+  - from: aws.vpc.eks.ns_backend.api_deploy
+    to: cloudwatch
+    type: https
+    label: "logs/metrics"
+  - from: aws.vpc.eks.ns_frontend.static_deploy
+    to: s3_assets
+    type: https
+    label: "sync"

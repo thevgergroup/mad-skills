@@ -1,0 +1,28 @@
+{
+  "name": "architect-diagram",
+  "version": "1.0.0",
+  "description": "Generate clean architecture diagrams from natural language. Supports AWS/GCP/Azure with VPC/AZ/subnet/ECS/K8s nesting, hybrid on-prem/cloud, and proper cloud provider icons.",
+  "author": "thevgergroup",
+  "tags": ["aws", "gcp", "azure", "architecture", "diagrams", "infrastructure", "k8s", "ecs", "vpc"],
+  "triggers": [
+    "architecture diagram",
+    "generate diagram",
+    "create diagram",
+    "draw architecture",
+    "infrastructure diagram",
+    "system diagram",
+    "cloud architecture"
+  ],
+  "entrypoint": "SKILL.md",
+  "capabilities": [
+    "aws-diagrams",
+    "gcp-diagrams",
+    "azure-diagrams",
+    "k8s-diagrams",
+    "hybrid-diagrams",
+    "natural-language-to-diagram",
+    "yaml-spec-to-diagram",
+    "vpc-subnet-nesting",
+    "cloud-icons"
+  ]
+}

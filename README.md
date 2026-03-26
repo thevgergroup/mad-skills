@@ -38,6 +38,7 @@ Once installed, skills are available as `/mad-skills:<skill-name>` in Claude Cod
 | Skill | Description |
 |---|---|
 | [`aws-marketplace`](skills/aws-marketplace/) | Publish paid container products to AWS Marketplace — entity model, 14-step creation sequence, ECR pipeline, pricing, CloudFormation, review process, and post-launch operations |
+| [`architect-diagram`](skills/architect-diagram/) | Generate clean cloud architecture diagrams from natural language or YAML specs — AWS/GCP/Azure with VPC/AZ/subnet/ECS/K8s nesting, hybrid on-prem/cloud topologies, and proper cloud provider icons |
 
 ## How these skills work
 

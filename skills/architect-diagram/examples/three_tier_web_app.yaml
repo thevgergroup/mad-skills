@@ -1,0 +1,141 @@
+title: "3-Tier Web Application on AWS"
+engine: d2
+layout: dagre
+
+connection_types:
+  https: { color: "#2196F3", style: solid }
+  sql: { color: "#4CAF50", style: solid }
+  replication: { color: "#607D8B", style: dashed }
+  internal: { color: "#9E9E9E", style: dashed }
+
+nodes:
+  - id: internet
+    label: "Internet"
+    icon: internet
+  - id: cloudfront
+    label: "CloudFront CDN"
+    icon: cloudfront
+  - id: route53
+    label: "Route 53"
+    icon: route53
+
+boundaries:
+  - id: aws
+    type: cloud
+    label: "AWS us-east-1"
+    children:
+      - id: s3_assets
+        label: "S3 Static Assets"
+        icon: s3
+      - id: alb
+        label: "App Load Balancer"
+        icon: alb
+      - id: vpc
+        type: vpc
+        label: "VPC 10.0.0.0/16"
+        children:
+          - id: az_a
+            type: availability-zone
+            label: "AZ us-east-1a"
+            direction: down
+            children:
+              - id: pub_subnet_a
+                type: subnet-public
+                label: "Public Subnet"
+                children:
+                  - id: igw
+                    label: "Internet GW"
+                    icon: igw
+                  - id: nat_a
+                    label: "NAT Gateway"
+                    icon: nat-gateway
+              - id: app_subnet_a
+                type: subnet-private
+                label: "App Subnet"
+                children:
+                  - id: ec2_a
+                    label: "EC2 Web/App"
+                    icon: ec2
+              - id: data_subnet_a
+                type: subnet-private
+                label: "Data Subnet"
+                children:
+                  - id: rds_primary
+                    label: "RDS Primary"
+                    icon: rds
+                  - id: elasticache
+                    label: "ElastiCache Redis"
+                    icon: elasticache
+          - id: az_b
+            type: availability-zone
+            label: "AZ us-east-1b"
+            direction: down
+            children:
+              - id: pub_subnet_b
+                type: subnet-public
+                label: "Public Subnet"
+                children:
+                  - id: nat_b
+                    label: "NAT Gateway"
+                    icon: nat-gateway
+              - id: app_subnet_b
+                type: subnet-private
+                label: "App Subnet"
+                children:
+                  - id: ec2_b
+                    label: "EC2 Web/App"
+                    icon: ec2
+              - id: data_subnet_b
+                type: subnet-private
+                label: "Data Subnet"
+                children:
+                  - id: rds_replica
+                    label: "RDS Replica"
+                    icon: rds
+
+connections:
+  - from: internet
+    to: route53
+    type: https
+    label: "DNS"
+  - from: route53
+    to: cloudfront
+    type: https
+  - from: cloudfront
+    to: aws.s3_assets
+    type: https
+    label: "static"
+  - from: cloudfront
+    to: aws.alb
+    type: https
+    label: "dynamic"
+  - from: aws.alb
+    to: aws.vpc.az_a.app_subnet_a.ec2_a
+    type: https
+  - from: aws.alb
+    to: aws.vpc.az_b.app_subnet_b.ec2_b
+    type: https
+  - from: aws.vpc.az_a.app_subnet_a.ec2_a
+    to: aws.s3_assets
+    type: https
+    label: "uploads"
+  - from: aws.vpc.az_b.app_subnet_b.ec2_b
+    to: aws.s3_assets
+    type: https
+    label: "uploads"
+  - from: aws.vpc.az_a.app_subnet_a.ec2_a
+    to: aws.vpc.az_a.data_subnet_a.rds_primary
+    type: sql
+    label: "3306"
+  - from: aws.vpc.az_a.app_subnet_a.ec2_a
+    to: aws.vpc.az_a.data_subnet_a.elasticache
+    type: internal
+    label: "cache"
+  - from: aws.vpc.az_b.app_subnet_b.ec2_b
+    to: aws.vpc.az_a.data_subnet_a.rds_primary
+    type: sql
+    label: "3306"
+  - from: aws.vpc.az_a.data_subnet_a.rds_primary
+    to: aws.vpc.az_b.data_subnet_b.rds_replica
+    type: replication
+    label: "sync"
