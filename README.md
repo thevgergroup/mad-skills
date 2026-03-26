@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="logo.svg" width="120" alt="mad-skills logo"/>
+  <img src="logo.jpg" width="120" alt="mad-skills logo"/>
   <h1>mad-skills</h1>
   <p><strong>Battle-tested Claude Code skills. Built from shipping real things, not reading docs.</strong></p>
 
