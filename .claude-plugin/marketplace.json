@@ -1,0 +1,23 @@
+{
+  "name": "mad-skills",
+  "owner": {
+    "name": "The Vger Group"
+  },
+  "metadata": {
+    "description": "Battle-tested Claude Code skills. Built from shipping real things, not reading docs.",
+    "homepage": "https://github.com/thevgergroup/mad-skills",
+    "version": "1.2.0"
+  },
+  "plugins": [
+    {
+      "name": "mad-skills",
+      "description": "Battle-tested Claude Code skills based on real shipping experience",
+      "source": "./",
+      "skills": [
+        "./skills/aws-marketplace",
+        "./skills/architect-diagram",
+        "./skills/docsearch"
+      ]
+    }
+  ]
+}
