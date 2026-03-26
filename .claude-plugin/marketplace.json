@@ -1,23 +1,42 @@
 {
   "name": "mad-skills",
+  "description": "Battle-tested Claude Code skills. Built from shipping real things, not reading docs.",
   "owner": {
     "name": "The Vger Group"
   },
-  "metadata": {
-    "description": "Battle-tested Claude Code skills. Built from shipping real things, not reading docs.",
-    "homepage": "https://github.com/thevgergroup/mad-skills",
-    "version": "1.2.0"
-  },
   "plugins": [
     {
-      "name": "mad-skills",
-      "description": "Battle-tested Claude Code skills based on real shipping experience",
+      "name": "aws-marketplace",
+      "description": "Publish paid container products to AWS Marketplace — entity model, 14-step creation sequence, ECR pipeline, pricing, CloudFormation, review process, and post-launch operations",
       "source": "./",
       "skills": [
-        "./skills/aws-marketplace",
-        "./skills/architect-diagram",
+        "./skills/aws-marketplace"
+      ],
+      "category": "cloud",
+      "homepage": "https://github.com/thevgergroup/mad-skills",
+      "license": "MIT"
+    },
+    {
+      "name": "architect-diagram",
+      "description": "Generate clean cloud architecture diagrams from natural language or YAML specs — AWS/GCP/Azure with VPC/AZ/subnet/ECS/K8s nesting, hybrid on-prem/cloud topologies, and proper cloud provider icons",
+      "source": "./",
+      "skills": [
+        "./skills/architect-diagram"
+      ],
+      "category": "development",
+      "homepage": "https://github.com/thevgergroup/mad-skills",
+      "license": "MIT"
+    },
+    {
+      "name": "docsearch",
+      "description": "Semantic search over a local document archive (PDF, Word, PowerPoint, Excel, Markdown) using ChromaDB and any OpenAI-compatible embeddings endpoint — incremental indexing, metadata filtering, JSON output for agent use",
+      "source": "./",
+      "skills": [
         "./skills/docsearch"
-      ]
+      ],
+      "category": "productivity",
+      "homepage": "https://github.com/thevgergroup/mad-skills",
+      "license": "MIT"
     }
   ]
 }
